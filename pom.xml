@@ -17,6 +17,8 @@
 		<logback.version>1.2.3</logback.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<lang3.version>3.9</lang3.version>
+		<hsql.version>2.5.0</hsql.version>
+		<junit.jupiter.version>5.4.2</junit.jupiter.version>
 	</properties>
 
 	<dependencyManagement>
@@ -46,11 +48,23 @@
 				<artifactId>commons-lang3</artifactId>
 				<version>${lang3.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsql.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-engine</artifactId>
+				<version>${junit.jupiter.version}</version>
+				<scope>test</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<modules>
 		<module>mock-server</module>
 		<module>spec-store</module>
+		<module>common</module>
 	</modules>
 </project>

@@ -1,4 +1,4 @@
-package io.github.cloudoas.apimock;
+package cloudoas.apimock.server;
 
 import io.undertow.util.Methods;
 

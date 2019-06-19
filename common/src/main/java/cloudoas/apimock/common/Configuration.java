@@ -1,4 +1,4 @@
-package io.github.cloudoas.apimock;
+package cloudoas.apimock.common;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,33 +10,38 @@ import org.slf4j.LoggerFactory;
 
 public class Configuration {
 	private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
-	private static final Properties prop = new Properties();
-	private static final String CONFIG_NAME = "api-bot.properties";
+	private final Properties prop = new Properties();
 	
-	public static final String SERVER_HOST = "server.host";
-	public static final String SERVER_PORT = "server.port";
+	private Configuration() {
+		// immutable
+	}
 	
-	static {
-		InputStream configInput = Configuration.class.getClassLoader().getResourceAsStream(CONFIG_NAME);
+	public static Configuration fromResource(String resourceName) {
+		Configuration config = new Configuration();
+		config.load(resourceName);
 		
-		try {
+		return config;
+	}
+	
+	private void load(String resourceName) {
+		try (InputStream configInput = Configuration.class.getClassLoader().getResourceAsStream(resourceName)){
 			prop.load(configInput);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 	
-	public static String getString(String key) {
+	public String getString(String key) {
 		return StringUtils.trimToEmpty(prop.getProperty(key));
 	}
 	
-	public static String getString(String key, String defaultValue) {
+	public String getString(String key, String defaultValue) {
 		String value = getString(key);
 		
 		return StringUtils.isBlank(value)?defaultValue:value;
 	}
 	
-	public static Integer getInt(String key) {
+	public Integer getInt(String key) {
 		Integer value = null;
 		
 		try {
@@ -48,7 +53,7 @@ public class Configuration {
 		return value;
 	}
 	
-	public static Integer getInt(String key, Integer defaultValue) {
+	public Integer getInt(String key, Integer defaultValue) {
 		Integer value = getInt(key);
 		
 		return null == value? defaultValue : value;

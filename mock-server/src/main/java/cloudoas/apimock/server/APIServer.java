@@ -1,10 +1,11 @@
-package io.github.cloudoas.apimock;
+package cloudoas.apimock.server;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cloudoas.apimock.common.Configuration;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
@@ -13,6 +14,7 @@ import io.undertow.server.RoutingHandler;
 public class APIServer {
 	private static final Logger logger = LoggerFactory.getLogger(APIServer.class);
 	private static final AtomicBoolean running = new AtomicBoolean(false);
+	private static final Configuration config = Configuration.fromResource(ConfigItems.CONFIG_NAME);
 	
 	private Undertow server = null;
 	private final RoutingHandler routingHandler = Handlers.routing();
@@ -24,8 +26,8 @@ public class APIServer {
 	
 	public synchronized void start() {
 		if (!running.get()) {
-			String host = Configuration.getString(Configuration.SERVER_HOST, Constants.DEFAULT_HOST);
-			int port = Configuration.getInt(Configuration.SERVER_PORT, Constants.DEFAULT_PORT);
+			String host = config.getString(ConfigItems.SERVER_HOST, Defaults.SERVER_HOST);
+			int port = config.getInt(ConfigItems.SERVER_PORT, Defaults.SERVER_PORT);
 			
 	        server = Undertow.builder()
 	                .addHttpListener(port, host)

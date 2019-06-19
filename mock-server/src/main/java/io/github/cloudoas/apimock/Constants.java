@@ -1,4 +1,4 @@
-package io.github.danielzcoding.apibot;
+package io.github.cloudoas.apimock;
 
 public interface Constants {
 	String DEFAULT_HOST="localhost";

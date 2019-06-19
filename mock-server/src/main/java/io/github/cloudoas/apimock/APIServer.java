@@ -1,4 +1,4 @@
-package io.github.danielzcoding.apibot;
+package io.github.cloudoas.apimock;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

@@ -68,7 +68,7 @@ public class Launcher {
 				
 				stmt.executeUpdate(sql);
 			} catch (Exception e) {
-				logger.error("failed to execute sql {}", e);
+				logger.error(String.format("failed to execute sql in %s", script.getName()), e);
 			}
 		}
 	}

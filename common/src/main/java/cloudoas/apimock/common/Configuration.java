@@ -25,7 +25,11 @@ public class Configuration {
 	
 	private void load(String resourceName) {
 		try (InputStream configInput = Configuration.class.getClassLoader().getResourceAsStream(resourceName)){
-			prop.load(configInput);
+			if (null!=configInput) {
+				prop.load(configInput);
+			}else {
+				logger.warn("cannot find config file {} in the class path.", resourceName);
+			}
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -45,7 +49,11 @@ public class Configuration {
 		Integer value = null;
 		
 		try {
-			value = Integer.valueOf(getString(key));
+			String text = getString(key);
+			
+			if (StringUtils.isNotBlank(text)) {
+				value = Integer.valueOf(text);
+			}
 		} catch (Throwable t) {
 			logger.error(t.getMessage(), t);
 		}

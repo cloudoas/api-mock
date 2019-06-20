@@ -19,6 +19,7 @@
 		<lang3.version>3.9</lang3.version>
 		<hsql.version>2.5.0</hsql.version>
 		<junit.jupiter.version>5.4.2</junit.jupiter.version>
+		<commonio.version>2.6</commonio.version>
 	</properties>
 
 	<dependencyManagement>
@@ -48,6 +49,11 @@
 				<artifactId>commons-lang3</artifactId>
 				<version>${lang3.version}</version>
 			</dependency>
+			<dependency>
+			    <groupId>commons-io</groupId>
+			    <artifactId>commons-io</artifactId>
+			    <version>${commonio.version}</version>
+			</dependency>			
 			<dependency>
 				<groupId>org.hsqldb</groupId>
 				<artifactId>hsqldb</artifactId>

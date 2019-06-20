@@ -1,9 +1,14 @@
 package cloudoas.apimock.specstore;
 
+import java.io.File;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +20,12 @@ public class Launcher {
 	
 	
 	public Connection initializeDB() {
+		String driver = config.getString(ConfigItems.DB_DRIVER, Defaults.DB_DRIVER);
+		
 		 try {
-		     Class.forName("org.hsqldb.jdbc.JDBCDriver" );
+		     Class.forName(driver);
 		 } catch (Exception e) {
-			 logger.error("Failed to load HSQLDB JDBC driver.", e);
+			 logger.error("Failed to load JDBC driver.", e);
 		     return null;
 		 }
 
@@ -36,6 +43,34 @@ public class Launcher {
 		}
 		 
 		 return conn;
+	}
+	
+	public void createTables(Connection conn) {
+		if (null==conn) {
+			logger.error("Do not have a valid DB connection");
+			return;
+		}
+		
+		String scriptPath = config.getString(ConfigItems.SQL_SCRIPTS_CREATE, Defaults.SQL_SCRIPTS_CREATE);
+		
+		File scriptDir = new File(scriptPath);
+		
+		if (!scriptDir.exists() || !scriptDir.isDirectory()) {
+			logger.error("Invalid script directory is specified. path={}", scriptPath);
+			return;
+		}
+		
+		File[] scripts = scriptDir.listFiles((dir, name)->StringUtils.endsWith(name, FileConstants.SQL_EXT));
+		
+		for (File script: scripts) {
+			try (Statement stmt = conn.createStatement()){
+				String sql = FileUtils.readFileToString(script, Charset.defaultCharset());
+				
+				stmt.executeUpdate(sql);
+			} catch (Exception e) {
+				logger.error("failed to execute sql {}", e);
+			}
+		}
 	}
 	
 	public static void main(String[] args) {

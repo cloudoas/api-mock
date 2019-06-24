@@ -1,4 +1,4 @@
-package cloudoas.apimock.specstore;
+package cloudoas.apimock.specstore.db;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -13,11 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cloudoas.apimock.common.Configuration;
+import cloudoas.apimock.common.FileInfo;
+import cloudoas.apimock.specstore.ConfigItems;
+import cloudoas.apimock.specstore.Defaults;
 
-public class Launcher {
-	private static final Logger logger = LoggerFactory.getLogger(Launcher.class);
+public class DataManager {
+	private static final Logger logger = LoggerFactory.getLogger(DataManager.class);
 	private static final Configuration config = Configuration.fromResource(ConfigItems.CONFIG_NAME);
-	
 	
 	public Connection initializeDB() {
 		String driver = config.getString(ConfigItems.DB_DRIVER, Defaults.DB_DRIVER);
@@ -60,7 +62,7 @@ public class Launcher {
 			return;
 		}
 		
-		File[] scripts = scriptDir.listFiles((dir, name)->StringUtils.endsWith(name, FileConstants.SQL_EXT));
+		File[] scripts = scriptDir.listFiles((dir, name)->StringUtils.endsWith(name, FileInfo.SQL_EXT));
 		
 		for (File script: scripts) {
 			try (Statement stmt = conn.createStatement()){
@@ -71,8 +73,5 @@ public class Launcher {
 				logger.error(String.format("failed to execute sql in %s", script.getName()), e);
 			}
 		}
-	}
-	
-	public static void main(String[] args) {
 	}
 }

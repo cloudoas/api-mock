@@ -53,6 +53,16 @@ public class DataManager {
 		this.conn = conn;
 	}
 	
+	public void close() {
+		if (null!=conn) {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+	}	
+	
 	public void createTables() {
 		String scriptPath = config.getString(ConfigItems.SQL_SCRIPTS_CREATE, Defaults.SQL_SCRIPTS_CREATE);
 		
@@ -93,8 +103,6 @@ public class DataManager {
 	        try (ResultSet generatedKeys = insertStmt.getGeneratedKeys()) {
 	            if (generatedKeys.next()) {
 	                return generatedKeys.getLong(1);
-	            } else {
-	                throw new SQLException("Creating user failed, no ID obtained.");
 	            }
 	        }
 		} catch (Exception e) {
@@ -124,11 +132,41 @@ public class DataManager {
         }
 	}
 	
+	public long getSpecId(String specName, String version) {
+		AtomicInteger result = new AtomicInteger(-1);
+		
+		query(SQL.FIND_SPEC_ID, queryStmt->{
+			int index = 1;
+			try {
+				queryStmt.setString(index++, specName);
+				queryStmt.setString(index++, version);
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}, resultSet->{
+			try {
+				if (resultSet.next()) {
+					result.set(resultSet.getInt(1));
+				}
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		});
+		
+		return result.longValue();	
+	}
+	
 	public long addSpec(String specName, String version) {
 		if (StringUtils.isBlank(specName)) {
 			logger.error("specName is required.");
 			
 			return ERROR;
+		}
+		
+		long id = getSpecId(specName, version);
+		
+		if (id>=0) {
+			return id;
 		}
 		
 		return insert(SQL.INSERT_SPEC, insertStmt->{
@@ -142,6 +180,29 @@ public class DataManager {
 		});
 	}
 	
+	public long getRequestPathId(String path) {
+		AtomicInteger result = new AtomicInteger(-1);
+		
+		query(SQL.FIND_REQUEST_PATH_ID, queryStmt->{
+			int index = 1;
+			try {
+				queryStmt.setString(index++, path);
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}, resultSet->{
+			try {
+				if (resultSet.next()) {
+					result.set(resultSet.getInt(1));
+				}
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		});
+		
+		return result.longValue();	
+	}
+	
 	public long addRequestPath(String path) {
 		if (StringUtils.isBlank(path)) {
 			logger.error("path is required.");
@@ -149,7 +210,13 @@ public class DataManager {
 			return ERROR;
 		}
 		
-		return insert(SQL.INSERT_REUEST_PATH, insertStmt->{
+		long id = getRequestPathId(path);
+		
+		if (id>=0) {
+			return id;
+		}
+		
+		return insert(SQL.INSERT_REQUEST_PATH, insertStmt->{
 			int index = 1;
 			try {
 				insertStmt.setString(index++, StringUtils.trimToEmpty(path));
@@ -190,6 +257,10 @@ public class DataManager {
 		}
 		
 		long id = getContentTypeId(contentType);
+		
+		if (id>=0) {
+			return id;
+		}
 		
 		return insert(SQL.INSERT_CONTENT_TYPE, insertStmt->{
 			int index = 1;
@@ -251,12 +322,6 @@ public class DataManager {
 			return ERROR;
 		}
 		
-		long bodyId = getResponseBodyId(specId, pathId, contentTypeId, name);
-		
-		if (bodyId>=0) {
-			return bodyId;
-		}
-		
 		return insert(SQL.INSERT_RESP_INDEX, insertStmt->{
 			int index = 1;
 			try {
@@ -272,21 +337,26 @@ public class DataManager {
 	}
 	
 	public void addResponse(String specName, String version, String path, String contentType, String name, String body) {
-		long specId = addSpec(specName, version);
-		long pathId = addRequestPath(path);
-		long contentTypeId = addContentType(contentType);
-		long respBodyId = addResponseBody(body);
+		long specId = addSpec(toDBString(specName), toDBString(version));
+		long pathId = addRequestPath(toDBString(path));
+		long contentTypeId = addContentType(toDBString(contentType));
 		
-		addResponseIndex(specId, pathId, contentTypeId, respBodyId, name);
+		if (specId<0 || pathId<0 || contentTypeId<0) {
+			logger.error("invalid id returned. {}, {}, {}", specId, pathId, contentTypeId);
+			
+			return;
+		}
+		
+		long bodyId = getResponseBodyId(specId, pathId, contentTypeId, toDBString(name));
+		
+		if (bodyId<0) {// only add when not found
+			long respBodyId = addResponseBody(body);
+			
+			addResponseIndex(specId, pathId, contentTypeId, respBodyId, toDBString(name));			
+		}
 	}
 	
-	public void close() {
-		if (null!=conn) {
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+	protected String toDBString(String s) {
+		return StringUtils.trimToEmpty(s).toLowerCase();
 	}
 }

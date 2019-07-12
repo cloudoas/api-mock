@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cloudoas.apimock.common.FileInfo;
+import cloudoas.apimock.datafactory.model.APIData;
+import cloudoas.apimock.datafactory.model.OperationData;
+import cloudoas.apimock.datafactory.model.PathData;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -21,6 +24,7 @@ import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem.HttpMethod;
 import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.examples.Example;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
@@ -33,10 +37,11 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 
 @SuppressWarnings("rawtypes")
 public class ResponseDataFactory {
+	private String source = null;
 	private OpenAPI openAPI = null;;
 	
-	public OpenAPI load(String specName) throws Exception {
-		File specFile = new File(specName);
+	public OpenAPI loadFile(String filename) throws Exception {
+		File specFile = new File(filename);
 		
 		String ext = FileInfo.getExtension(specFile);
 		if (StringUtils.equalsIgnoreCase(ext, FileInfo.JSON_EXT)) {
@@ -47,38 +52,67 @@ public class ResponseDataFactory {
 			throw new UnsupportedOperationException("Unknow file format " + ext);
 		}
 		
+		this.source=filename;
 		
 		return openAPI;
 	}
 	
-	public void makeData() {
+	public APIData makeData() {
 		Paths paths = openAPI.getPaths();
+		APIData apiData = new APIData();
+		apiData.setSpecName(getSpecName());
+		apiData.setVersion(getVersion());
 		
-		
-		paths.forEach((key, pathItem)->{
-			System.out.println("path:" + key);
+		paths.forEach((path, pathItem)->{
+			PathData pathData = new PathData();
+			apiData.addPathData(path, pathData);
 			
 			Map<HttpMethod, Operation> operations = pathItem.readOperationsMap();
 			
-			operations.forEach((method, operation) -> handleOperation(method, operation));
+			operations.forEach((method, operation) -> pathData.addOperationData(method, handleOperation(operation)));
 			
-		});		
+		});	
+		
+		return apiData;
 	}
 	
-	private Map<String, Object> handleOperation(HttpMethod method, Operation operation) {
-		// method?
-		Map<String, Object> mockResponses= new HashMap<>();
+	protected String getSpecName() {
+		String title = null;
+		Info info = openAPI.getInfo();
+		
+		if (null!=info) {
+			title = info.getTitle();
+		}
+		
+		if (StringUtils.isNotBlank(title)) {
+			return title;
+		}
+		
+		return FileInfo.getName(new File(this.source));
+	}
+	
+	protected String getVersion() {
+		String version = null;
+		Info info = openAPI.getInfo();
+		
+		if (null!=info) {
+			version = info.getVersion();
+		}
+		
+		return StringUtils.trimToEmpty(version);
+	}
+	
+	protected OperationData handleOperation(Operation operation) {
+		OperationData operationData = new OperationData();
 		
 		ApiResponses responses = operation.getResponses();
 		
-		responses.forEach((name, response)->mockResponses.put(name,handleResponse(response)));
+		responses.forEach((name, response)->operationData.addResponseData(name, handleResponse(response)));
 		
-		System.out.println(mockResponses);
-		
-		return mockResponses;
+		return operationData;
 	}
 	
-	private Map<String, Object> handleResponse(ApiResponse response) {
+	protected Map<String, Object> handleResponse(ApiResponse response) {
 		Map<String, Object> mockResponse = new HashMap<>();
 	
 		Content content = response.getContent();
@@ -90,7 +124,7 @@ public class ResponseDataFactory {
 		return mockResponse;
 	}
 	
-	private Object handleSchema(MediaType mediaType) {
+	protected Object handleSchema(MediaType mediaType) {
 		Object example = mediaType.getExample();
 		
 		if (null!=example) {
@@ -108,7 +142,7 @@ public class ResponseDataFactory {
 		return generateMockData(mediaType.getSchema());
 	}
 	
-	private JsonNode generateMockData(Schema schema) {
+	protected JsonNode generateMockData(Schema schema) {
 		Schema expandedSchema = expandSchema(schema);
 		Class schemaType = expandedSchema.getClass();
 		
@@ -131,7 +165,7 @@ public class ResponseDataFactory {
 		return null;
 	}	
 	
-	private JsonNode generateMockArray(ArraySchema schema) {
+	protected JsonNode generateMockArray(ArraySchema schema) {
 		Schema<?> itemSchema = expandSchema(schema.getItems());
 		
 		ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
@@ -141,7 +175,7 @@ public class ResponseDataFactory {
 		return arrayNode;
 	}
 	
-	private JsonNode generateMockObject(ObjectSchema schema) {
+	protected JsonNode generateMockObject(ObjectSchema schema) {
 		Map<String, Schema> properties = schema.getProperties();
 		ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
 		
@@ -150,18 +184,18 @@ public class ResponseDataFactory {
 		return objectNode;
 	}
 	
-	private JsonNode generateMockInteger(IntegerSchema schema) {
+	protected JsonNode generateMockInteger(IntegerSchema schema) {
 		int randomInt = ThreadLocalRandom.current().nextInt(0, 10);
 		return JsonNodeFactory.instance.numberNode(randomInt);
 	}
 	
-	private JsonNode generateMockString(StringSchema schema) {
+	protected JsonNode generateMockString(StringSchema schema) {
 		int randomInt = ThreadLocalRandom.current().nextInt(3, 10);
 		String randomString = RandomStringUtils.randomAlphabetic(randomInt);
 		return JsonNodeFactory.instance.textNode(randomString);
 	}	
 	
-	public Schema expandSchema(Schema schema) {
+	protected Schema expandSchema(Schema schema) {
 		Schema expandedSchema = schema;
 		String ref = schema.get$ref();
 		
@@ -172,7 +206,7 @@ public class ResponseDataFactory {
 		return expandedSchema;
 	}
 	
-	public Object resolveRef(String ref) {
+	protected Object resolveRef(String ref) {
 		if (ref.startsWith(Constants.REF_SECTION_PREFIX)) {
 			if (!ref.startsWith(Constants.REF_COMPONENTS)) {
 				throw new UnknownError("Unknow ref format. ref="+ref);
@@ -192,7 +226,7 @@ public class ResponseDataFactory {
 		return null;
 	}
 	
-	public Object resolveRef(String category, String name) {
+	protected Object resolveRef(String category, String name) {
 		switch(category) {
 		case Constants.REF_COMPONENTS_SCHEMAS: 
 			Map<String, Schema> schemas = this.openAPI.getComponents().getSchemas();

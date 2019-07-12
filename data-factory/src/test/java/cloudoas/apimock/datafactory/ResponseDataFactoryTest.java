@@ -1,7 +1,12 @@
 package cloudoas.apimock.datafactory;
 
 
+import java.io.File;
+
 import org.junit.jupiter.api.Test;
+
+import cloudoas.apimock.common.FileInfo;
+import cloudoas.apimock.datafactory.model.APIData;
 
 public class ResponseDataFactoryTest {
 
@@ -9,9 +14,17 @@ public class ResponseDataFactoryTest {
 	public void test() throws Exception {
 		ResponseDataFactory f = new ResponseDataFactory();
 		
-		f.load("./src/test/resources/petstore.yaml");
+		f.loadFile("./src/test/resources/petstore.yaml");
 		
-		f.makeData();
+		APIData apiData = f.makeData();
 		
+		System.out.println(apiData.toString());
+	}
+	
+	@Test
+	public void testFile() {
+		File f = new File("./src/test/resources/petstore.yaml");
+		
+		System.out.println(FileInfo.getName(f));
 	}
 }

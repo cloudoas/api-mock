@@ -19,4 +19,14 @@ public interface FileInfo {
 	    }
 	    return name.substring(lastIndexOf);
 	}
+	
+	static String getName(File file) {
+	    String name = file.getName();
+	    int lastIndexOf = name.lastIndexOf(DOT);
+	    
+	    if (lastIndexOf < 0) {
+	        return name;
+	    }
+	    return name.substring(0, lastIndexOf);	    
+	}
 }

@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
-public class ClientHanlderTest {
+public class ClientHelperTest {
 	@Test
 	public void test_download() throws Exception {
-		String content = ClientHelper.download(new URI("https://cloudoas.github.io/index.html"));
+		String content = ClientHelper.download(new URI("https://cloudoas.github.io/"));
 		
 		assertTrue(StringUtils.isNotBlank(content));
 	}

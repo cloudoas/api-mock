@@ -22,6 +22,7 @@
 		<commonio.version>2.6</commonio.version>
 		<snakeyaml.version>1.24</snakeyaml.version>
 		<swagger.version>2.0.8</swagger.version>
+		<jackson.version>2.9.9</jackson.version>
 	</properties>
 
 	<dependencyManagement>
@@ -31,6 +32,11 @@
 				<artifactId>undertow-core</artifactId>
 				<version>${undertow.version}</version>
 			</dependency>
+			<dependency>
+			    <groupId>com.fasterxml.jackson.core</groupId>
+			    <artifactId>jackson-databind</artifactId>
+			    <version>${jackson.version}</version>
+			</dependency>			
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-core</artifactId>

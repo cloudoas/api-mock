@@ -16,8 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cloudoas.apimock.common.Configuration;
-import cloudoas.apimock.common.FileInfo;
+import cloudoas.apimock.common.file.Configuration;
+import cloudoas.apimock.common.file.Format;
 import cloudoas.apimock.specstore.ConfigItems;
 import cloudoas.apimock.specstore.Defaults;
 
@@ -73,7 +73,7 @@ public class DataManager {
 			return;
 		}
 		
-		File[] scripts = scriptDir.listFiles((dir, name)->StringUtils.endsWith(name, FileInfo.SQL_EXT));
+		File[] scripts = scriptDir.listFiles((dir, name)->StringUtils.endsWith(name.toUpperCase(), Format.SQL.name()));
 		
 		try (Statement stmt = conn.createStatement()){
 			for (File script: scripts) {

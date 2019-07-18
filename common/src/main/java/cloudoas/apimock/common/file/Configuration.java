@@ -1,4 +1,4 @@
-package cloudoas.apimock.common;
+package cloudoas.apimock.common.file;
 
 import java.io.IOException;
 import java.io.InputStream;

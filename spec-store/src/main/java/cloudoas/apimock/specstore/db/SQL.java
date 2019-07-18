@@ -1,6 +1,6 @@
 package cloudoas.apimock.specstore.db;
 
-import cloudoas.apimock.common.Configuration;
+import cloudoas.apimock.common.file.Configuration;
 
 public class SQL {
 	private static final Configuration sqls = Configuration.fromResource("sqls.properties");

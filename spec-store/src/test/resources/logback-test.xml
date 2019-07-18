@@ -2,7 +2,7 @@
 <configuration>
 
 	<property name="LOGS" value="./logs" />
-	<property name="LOG_FILENAME" value="mock-server" />
+	<property name="LOG_FILENAME" value="spec-store" />
 
 	<appender name="Console"
 		class="ch.qos.logback.core.ConsoleAppender">

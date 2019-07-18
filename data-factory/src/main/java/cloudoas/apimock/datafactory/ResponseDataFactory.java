@@ -13,7 +13,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import cloudoas.apimock.common.FileInfo;
+import cloudoas.apimock.common.file.FileInfo;
+import cloudoas.apimock.common.file.Format;
 import cloudoas.apimock.datafactory.model.APIData;
 import cloudoas.apimock.datafactory.model.OperationData;
 import cloudoas.apimock.datafactory.model.PathData;
@@ -40,21 +41,33 @@ public class ResponseDataFactory {
 	private String source = null;
 	private OpenAPI openAPI = null;;
 	
-	public OpenAPI loadFile(String filename) throws Exception {
-		File specFile = new File(filename);
-		
+	public OpenAPI loadSpec(File specFile) throws Exception {
 		String ext = FileInfo.getExtension(specFile);
-		if (StringUtils.equalsIgnoreCase(ext, FileInfo.JSON_EXT)) {
+		if (StringUtils.equalsIgnoreCase(ext, Format.JSON.name())) {
 			openAPI = Json.mapper().readValue(specFile, OpenAPI.class);
-		}else if (StringUtils.equalsIgnoreCase(ext, FileInfo.YML_EXT)||StringUtils.equalsIgnoreCase(ext, FileInfo.YAML_EXT)) {
+		}else if (StringUtils.equalsIgnoreCase(ext, Format.YML.name())||StringUtils.equalsIgnoreCase(ext, Format.YAML.name())) {
 			openAPI = Yaml.mapper().readValue(specFile, OpenAPI.class);
 		}else {
 			throw new UnsupportedOperationException("Unknow file format " + ext);
 		}
 		
-		this.source=filename;
+		this.source=specFile.getName();
 		
 		return openAPI;
+	}
+	
+	public OpenAPI loadSpec(String specContent, String format) throws Exception{
+		if (StringUtils.equalsIgnoreCase(format, Format.JSON.name())) {
+			openAPI = Json.mapper().readValue(specContent, OpenAPI.class);
+		}else if (StringUtils.equalsIgnoreCase(format, Format.YML.name())||StringUtils.equalsIgnoreCase(format, Format.YAML.name())) {
+			openAPI = Yaml.mapper().readValue(specContent, OpenAPI.class);
+		}else {
+			throw new UnsupportedOperationException("Unknow format " + format);
+		}
+		
+		this.source=null;
+		
+		return openAPI;		
 	}
 	
 	public APIData makeData() {
@@ -88,7 +101,11 @@ public class ResponseDataFactory {
 			return title;
 		}
 		
-		return FileInfo.getName(new File(this.source));
+		if (StringUtils.isNotBlank(this.source)) {
+			return FileInfo.getName(new File(this.source));
+		}
+		
+		return null;
 	}
 	
 	protected String getVersion() {

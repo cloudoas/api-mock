@@ -1,7 +1,6 @@
 package cloudoas.apimock.datafactory;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -18,6 +17,7 @@ import cloudoas.apimock.common.file.Format;
 import cloudoas.apimock.datafactory.model.APIData;
 import cloudoas.apimock.datafactory.model.OperationData;
 import cloudoas.apimock.datafactory.model.PathData;
+import cloudoas.apimock.datafactory.model.ResponseData;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -82,7 +82,7 @@ public class ResponseDataFactory {
 			
 			Map<HttpMethod, Operation> operations = pathItem.readOperationsMap();
 			
-			operations.forEach((method, operation) -> pathData.addOperationData(method, handleOperation(operation)));
+			operations.forEach((method, operation) -> pathData.add(method, handleOperation(operation)));
 			
 		});	
 		
@@ -124,18 +124,18 @@ public class ResponseDataFactory {
 		
 		ApiResponses responses = operation.getResponses();
 		
-		responses.forEach((name, response)->operationData.addResponseData(name, handleResponse(response)));
+		responses.forEach((name, response)->operationData.add(name, handleResponse(response)));
 		
 		return operationData;
 	}
 	
-	protected Map<String, Object> handleResponse(ApiResponse response) {
-		Map<String, Object> mockResponse = new HashMap<>();
+	protected ResponseData handleResponse(ApiResponse response) {
+		ResponseData mockResponse = new ResponseData();
 	
 		Content content = response.getContent();
 		
 		if (null!=content) {
-			content.forEach((nm, mediaType)->mockResponse.put(nm, handleSchema(mediaType)));
+			content.forEach((contentType, mediaType)->mockResponse.add(contentType, handleSchema(mediaType)));
 		}
 		
 		return mockResponse;

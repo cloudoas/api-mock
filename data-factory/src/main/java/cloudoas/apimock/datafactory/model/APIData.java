@@ -6,7 +6,7 @@ import java.util.Map;
 public class APIData {
 	private String specName;
 	private String version;
-	private Map<String, PathData> pathData = new HashMap<>();
+	private Map<String, PathData> pathMap = new HashMap<>();
 	
 	public String getSpecName() {
 		return specName;
@@ -20,11 +20,11 @@ public class APIData {
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	public  Map<String, PathData> getPathData() {
-		return pathData;
+	public  Map<String, PathData> getPathMap() {
+		return pathMap;
 	}
 	public void addPathData(String path, PathData pathData) {
-		this.pathData.put(path, pathData);
+		this.pathMap.put(path, pathData);
 	}
 	
 	@Override
@@ -33,7 +33,7 @@ public class APIData {
 		
 		apiData.append(String.format("specName=>%s\nversion=>%s\n", specName, version));
 		
-		pathData.entrySet().forEach(entry->apiData.append(String.format("%s=>%s\n", entry.getKey(), entry.getValue().toString())));
+		pathMap.entrySet().forEach(entry->apiData.append(String.format("%s=>%s\n", entry.getKey(), entry.getValue().toString())));
 	
 		return apiData.toString();
 	}

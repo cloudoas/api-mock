@@ -11,4 +11,6 @@ public interface ConfigItems {
 	String DB_PASSWORD="db.password";
 	
 	String SQL_SCRIPTS_CREATE = "sql.create";
+	
+	String SPEC_LOCATION = "spec.location";
 }

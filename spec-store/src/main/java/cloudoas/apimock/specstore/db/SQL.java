@@ -13,6 +13,9 @@ public class SQL {
 	
 	public static final String FIND_SPEC_ID=sqls.getString("find.spec.id");
 	public static final String FIND_REQUEST_PATH_ID=sqls.getString("find.request.path.id");
+	public static final String FIND_REQUEST_PATHS=sqls.getString("find.request.paths");
 	public static final String FIND_CONTENT_TYPE_ID=sqls.getString("find.content.type.id");
 	public static final String FIND_RESP_BODY_ID=sqls.getString("find.resp.body.id");
+	public static final String FIND_RESP_ALL=sqls.getString("find.resp.all");
+	public static final String FIND_RESP_OF_CONTENTTYPE=sqls.getString("find.resp.of.contenttype");
 }

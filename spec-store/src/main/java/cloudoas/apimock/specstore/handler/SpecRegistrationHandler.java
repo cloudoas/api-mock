@@ -17,8 +17,8 @@ import cloudoas.apimock.specstore.model.SpecInfo;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 
-public class SpecPostHandler implements HttpHandler{
-	private static final Logger logger = LoggerFactory.getLogger(SpecPostHandler.class);
+public class SpecRegistrationHandler implements HttpHandler{
+	private static final Logger logger = LoggerFactory.getLogger(SpecRegistrationHandler.class);
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override

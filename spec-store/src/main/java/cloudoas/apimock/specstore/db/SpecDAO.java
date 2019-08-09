@@ -2,6 +2,11 @@ package cloudoas.apimock.specstore.db;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +17,7 @@ import cloudoas.apimock.common.file.Configuration;
 import cloudoas.apimock.datafactory.ResponseDataFactory;
 import cloudoas.apimock.datafactory.model.APIData;
 import cloudoas.apimock.specstore.ConfigItems;
+import cloudoas.apimock.specstore.Defaults;
 
 public enum SpecDAO {
 	INSTANCE;
@@ -74,12 +80,36 @@ public enum SpecDAO {
 		});
 	}
 	
-	public long getRequestPathId(String path) {
+	public Collection<String> findRequestPaths(long specId){
+		List<String> paths = new ArrayList<>();
+		
+		dbManager.query(SQL.FIND_REQUEST_PATHS, queryStmt->{
+			int index = 1;
+			try {
+				queryStmt.setLong(index++, specId);
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}, resultSet->{
+			try {
+				while (resultSet.next()) {
+					paths.add(resultSet.getString(1));
+				}
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		});
+		
+		return paths;
+	}
+	
+	public long getRequestPathId(long specId, String path) {
 		AtomicInteger result = new AtomicInteger(-1);
 		
 		dbManager.query(SQL.FIND_REQUEST_PATH_ID, queryStmt->{
 			int index = 1;
 			try {
+				queryStmt.setLong(index++, specId);
 				queryStmt.setString(index++, path);
 			} catch (SQLException e) {
 				logger.error(e.getMessage(), e);
@@ -97,14 +127,14 @@ public enum SpecDAO {
 		return result.longValue();	
 	}
 	
-	public long addRequestPath(String path) {
+	public long addRequestPath(long specId, String path) {
 		if (StringUtils.isBlank(path)) {
 			logger.error("path is required.");
 			
 			return DBManager.ERROR;
 		}
 		
-		long id = getRequestPathId(path);
+		long id = getRequestPathId(specId, path);
 		
 		if (id>=0) {
 			return id;
@@ -113,7 +143,8 @@ public enum SpecDAO {
 		return dbManager.insert(SQL.INSERT_REQUEST_PATH, insertStmt->{
 			int index = 1;
 			try {
-				insertStmt.setString(index++, StringUtils.trimToEmpty(path));
+				insertStmt.setLong(index++, specId);
+				insertStmt.setString(index++, path);
 			} catch (SQLException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -183,6 +214,32 @@ public enum SpecDAO {
 		});
 	}
 	
+	public Map<String, String> getResponses(long specId, long pathId, String requestMethod){
+		Map<String, String> results = new HashMap<>();
+		
+		dbManager.query(SQL.FIND_RESP_ALL, queryStmt->{
+			int index = 1;
+			try {
+				queryStmt.setLong(index++, specId);
+				queryStmt.setLong(index++, pathId);
+				queryStmt.setString(index++, requestMethod);
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}, resultSet->{
+			try {
+				while (resultSet.next()) {
+					String key = String.format("%s%s%s", resultSet.getString(1), Defaults.KEY_DELIMIETER, resultSet.getString(2));
+					results.put(key, resultSet.getString(3));
+				}
+			} catch (SQLException e) {
+				logger.error(e.getMessage(), e);
+			}
+		});
+		
+		return results;
+	}
+	
 	public long getResponseBodyId(long specId, long pathId, long contentTypeId, String requestMethod, String responseName) {
 		AtomicInteger result = new AtomicInteger(-1);
 		
@@ -236,7 +293,7 @@ public enum SpecDAO {
 		long specId = addSpec(DBManager.toDBString(apiData.getSpecName()), DBManager.toDBString(apiData.getVersion()));
 		
 		apiData.getPathMap().forEach((path, pathData)->{
-			long pathId = addRequestPath(DBManager.toDBString(path));
+			long pathId = addRequestPath(specId, DBManager.toDBString(path));
 			
 			pathData.get().forEach((method, operationData)->{
 				

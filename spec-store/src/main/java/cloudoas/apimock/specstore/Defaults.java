@@ -11,4 +11,7 @@ public interface Defaults {
 	String DB_USERNAME="SA";
 	String DB_PASSWORD=StringUtils.EMPTY;
 	String SQL_SCRIPTS_CREATE="./sql/create";
+	
+	String CONTENT_TYPE="application/json";
+	String KEY_DELIMIETER="#";
 }

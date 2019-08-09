@@ -19,6 +19,7 @@
 		<lang3.version>3.9</lang3.version>
 		<hsql.version>2.5.0</hsql.version>
 		<junit.jupiter.version>5.4.2</junit.jupiter.version>
+		<junit.platform.version>1.5.1</junit.platform.version>
 		<commonio.version>2.6</commonio.version>
 		<snakeyaml.version>1.24</snakeyaml.version>
 		<swagger.version>2.0.8</swagger.version>
@@ -33,10 +34,10 @@
 				<version>${undertow.version}</version>
 			</dependency>
 			<dependency>
-			    <groupId>com.fasterxml.jackson.core</groupId>
-			    <artifactId>jackson-databind</artifactId>
-			    <version>${jackson.version}</version>
-			</dependency>			
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>${jackson.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>ch.qos.logback</groupId>
 				<artifactId>logback-core</artifactId>
@@ -82,6 +83,17 @@
 				<artifactId>junit-jupiter-engine</artifactId>
 				<version>${junit.jupiter.version}</version>
 				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-launcher</artifactId>
+				<version>${junit.platform.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-commons</artifactId>
+				<version>${junit.platform.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cloudoas.apimock.common.file.Configuration;
-import cloudoas.apimock.specstore.handler.ResponseGetHandler;
-import cloudoas.apimock.specstore.handler.SpecPostHandler;
+import cloudoas.apimock.specstore.handler.ResponseQueryHandler;
+import cloudoas.apimock.specstore.handler.SpecRegistrationHandler;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.RoutingHandler;
@@ -30,8 +30,8 @@ public class SpecStoreServer {
 		String host = config.getString(ConfigItems.SERVER_HOST, Defaults.SERVER_HOST);
 		int port = config.getInt(ConfigItems.SERVER_PORT, Defaults.SERVER_PORT);
 		
-		routingHandler.add(Methods.POST, "/specs", new SpecPostHandler());
-		routingHandler.add(Methods.GET, "/response", new ResponseGetHandler());
+		routingHandler.add(Methods.POST, "/specs", new SpecRegistrationHandler());
+		routingHandler.add(Methods.GET, "/response", new ResponseQueryHandler());
 		
         server = Undertow.builder()
                 .addHttpListener(port, host)

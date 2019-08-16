@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.ChannelListeners;
@@ -30,8 +31,10 @@ import io.undertow.protocols.ssl.UndertowXnioSsl;
 import io.undertow.server.DefaultByteBufferPool;
 import io.undertow.util.AttachmentKey;
 import io.undertow.util.Headers;
+import io.undertow.util.HttpString;
 import io.undertow.util.Methods;
 import io.undertow.util.StringReadChannelListener;
+import io.undertow.util.StringWriteChannelListener;
 
 public class ClientHelper {
 	private static final Logger logger = LoggerFactory.getLogger(ClientHelper.class);
@@ -55,6 +58,19 @@ public class ClientHelper {
     	return HTTPS.equalsIgnoreCase(uri.getScheme());
     }
     
+    public static String request(URI uri, HttpString method, String requestBody) {
+    	SSLContext defaultSSLContext = null;
+    	boolean secure = isSecure(uri);
+    	
+    	try {
+			defaultSSLContext= secure?SSLContext.getDefault():null;
+		} catch (NoSuchAlgorithmException e) {
+			logger.error(e.getMessage(), e);
+		}
+    	
+    	return request(uri, secure, method, defaultSSLContext, requestBody);   	
+    }
+    
     public static String download(URI uri) {
     	SSLContext defaultSSLContext = null;
     	boolean secure = isSecure(uri);
@@ -65,10 +81,10 @@ public class ClientHelper {
 			logger.error(e.getMessage(), e);
 		}
     	
-    	return download(uri, secure, defaultSSLContext);
+    	return request(uri, secure, Methods.GET, defaultSSLContext, null);
     }
     
-    public static String download(URI uri, boolean secure, SSLContext sslContext) {
+    public static String request(URI uri, boolean secure, HttpString method, SSLContext sslContext, String requestBody) {
         final UndertowClient client = UndertowClient.getInstance();
         
         Xnio xnio = Xnio.getInstance();
@@ -88,18 +104,31 @@ public class ClientHelper {
         AtomicReference<ClientResponse> reference = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
         
-        try (ClientConnection connection = client.connect(new URI(String.format("%s://%s", uri.getScheme(), uri.getHost())), xnioWorker, ssl, BUFFER_POOL, OptionMap.EMPTY).get()){
+        URI targetURI = null;
+        
+        try {
+        	targetURI = new URI(String.format("%s://%s:%d", uri.getScheme(), uri.getHost(), uri.getPort()>0?uri.getPort():8080));
+        } catch (Exception e) {
+        	logger.error(e.getMessage(), e);
+        }
+        
+        try (ClientConnection connection = client.connect(targetURI, xnioWorker, ssl, BUFFER_POOL, OptionMap.EMPTY).get()){
             connection.getIoThread().execute(new Runnable() {
                 @Override
                 public void run() {
-                        ClientRequest request = new ClientRequest().setMethod(Methods.GET).setPath(uri.getPath());
+                        ClientRequest request = new ClientRequest().setMethod(method).setPath(uri.getPath());
                         request.getRequestHeaders().put(Headers.HOST, uri.getHost());
-                        connection.sendRequest(request, createClientCallback(reference, latch));
+                        
+                        if (StringUtils.isNotBlank(requestBody)) {
+                            request.getRequestHeaders().put(Headers.TRANSFER_ENCODING, "chunked");
+                        }
+                        
+                        connection.sendRequest(request, createClientCallback(reference, latch, requestBody));
                     }
 
             });
 
-            latch.await(10, TimeUnit.SECONDS);
+            latch.await(30, TimeUnit.SECONDS);
 
             final ClientResponse response = reference.get();
             
@@ -124,10 +153,14 @@ public class ClientHelper {
         return null;
     }
     
-    private static ClientCallback<ClientExchange> createClientCallback(final AtomicReference<ClientResponse> responseRef, final CountDownLatch latch) {
+    private static ClientCallback<ClientExchange> createClientCallback(final AtomicReference<ClientResponse> responseRef, final CountDownLatch latch, final String requestBody) {
         return new ClientCallback<ClientExchange>() {
             @Override
             public void completed(ClientExchange result) {
+            	if (StringUtils.isNotBlank(requestBody)) {
+            		new StringWriteChannelListener(requestBody).setup(result.getRequestChannel());
+            	}
+            	
                 result.setResponseListener(new ClientCallback<ClientExchange>() {
                     @Override
                     public void completed(final ClientExchange result) {

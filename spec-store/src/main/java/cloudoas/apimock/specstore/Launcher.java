@@ -5,7 +5,6 @@ import cloudoas.apimock.specstore.db.DBManager;
 import cloudoas.apimock.specstore.db.SpecDAO;
 
 public class Launcher {
-
 	public static void main(String[] args) {
 		Configuration config = Configuration.fromResource(ConfigItems.CONFIG_NAME);
 		

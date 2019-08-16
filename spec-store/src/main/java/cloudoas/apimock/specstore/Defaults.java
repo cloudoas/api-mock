@@ -14,4 +14,5 @@ public interface Defaults {
 	
 	String CONTENT_TYPE="application/json";
 	String KEY_DELIMIETER="#";
+	String STATUS_CODE="default";
 }

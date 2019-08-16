@@ -11,7 +11,6 @@ import cloudoas.apimock.specstore.handler.SpecRegistrationHandler;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.RoutingHandler;
-import io.undertow.util.Methods;
 
 public class SpecStoreServer {
 	private static final Logger logger = LoggerFactory.getLogger(SpecStoreServer.class);
@@ -30,8 +29,8 @@ public class SpecStoreServer {
 		String host = config.getString(ConfigItems.SERVER_HOST, Defaults.SERVER_HOST);
 		int port = config.getInt(ConfigItems.SERVER_PORT, Defaults.SERVER_PORT);
 		
-		routingHandler.add(Methods.POST, "/specs", new SpecRegistrationHandler());
-		routingHandler.add(Methods.GET, "/response", new ResponseQueryHandler());
+		routingHandler.post("/specification", new SpecRegistrationHandler());
+		routingHandler.post("/response", new ResponseQueryHandler());
 		
         server = Undertow.builder()
                 .addHttpListener(port, host)
@@ -52,6 +51,7 @@ public class SpecStoreServer {
 		if (running.get()) {
 			server.stop();
 			running.set(false);
+			logger.info("Server stopped.");	
 		}
 	}
 }

@@ -26,6 +26,7 @@ public class ResponseQueryHandler implements HttpHandler{
 
 	@Override
 	public void handleRequest(HttpServerExchange exchange) throws Exception {
+		logger.info("ResponseQueryHandler ...");
 		
         exchange.getRequestReceiver().receiveFullString((request, message) -> {
             if(StringUtils.isBlank(message)) {
@@ -51,12 +52,20 @@ public class ResponseQueryHandler implements HttpHandler{
         			return;			
         		}
         		
+                if(logger.isDebugEnabled()) {
+                	logger.debug("specId = " + specId);
+                }
+        		
         		Collection<String> paths = SpecDAO.INSTANCE.findRequestPaths(specId);
         		
         		if (paths.isEmpty()) {
         			HandlerHelper.handleBadRequest(request, "No request path defined.");
         			return;			
         		}
+        		
+                if(logger.isDebugEnabled()) {
+                	logger.debug("paths = " + paths);
+                }
         		
         		String path = PathMatcher.match(paths, mockRequest.getRequestPath());
         		
@@ -65,7 +74,15 @@ public class ResponseQueryHandler implements HttpHandler{
         			return;				
         		}
         		
+                if(logger.isDebugEnabled()) {
+                	logger.debug("path = " + path);
+                }
+        		
         		long pathId = SpecDAO.INSTANCE.getRequestPathId(specId, path);
+        		
+                if(logger.isDebugEnabled()) {
+                	logger.debug("pathId = " + pathId);
+                }
         		
         		Map<String, String> responses = SpecDAO.INSTANCE.getResponses(specId, pathId, mockRequest.getRequestMethod());
         		
@@ -74,6 +91,10 @@ public class ResponseQueryHandler implements HttpHandler{
         			return;
         		}
         		
+  
+                if(logger.isDebugEnabled()) {
+                	logger.debug("responses = " + responses);
+                }        		
         		
         		MockResponse mockResponse = findResponse(responses, mockRequest);
         		
@@ -101,20 +122,16 @@ public class ResponseQueryHandler implements HttpHandler{
 			return buildResponse(key, responses.get(key));
 		}
 		
-		for (Entry<String, String> entry: responses.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			
-			if (StringUtils.equalsAnyIgnoreCase(key, 
-					String.format("%s%s%s", 
-							StringUtils.trimToEmpty(mockRequest.getContentType()), 
-							Defaults.KEY_DELIMIETER, 
-							StringUtils.trimToEmpty(mockRequest.getStatusCode())))) {
-				return buildResponse(key, value);
-			}
-		}
+		String key = String.format("%s%s%s", 
+				StringUtils.defaultIfBlank(mockRequest.getContentType(), Defaults.CONTENT_TYPE), 
+				Defaults.KEY_DELIMIETER, 
+				StringUtils.defaultIfBlank(mockRequest.getStatusCode(), Defaults.STATUS_CODE));
 		
-		return null;
+		
+		String body = responses.get(key);
+		
+		
+		return null==body?null:buildResponse(key, body);
 	}
 	
 	private int getStatusCode(String code) {

@@ -23,7 +23,7 @@
 		<commonio.version>2.6</commonio.version>
 		<snakeyaml.version>1.24</snakeyaml.version>
 		<swagger.version>2.0.8</swagger.version>
-		<jackson.version>2.9.9</jackson.version>
+		<jackson.version>2.12.6.1</jackson.version>
 	</properties>
 
 	<dependencyManagement>
